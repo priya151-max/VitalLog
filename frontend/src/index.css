@@ -1,0 +1,107 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+
+@theme {
+  --color-medical-50: #f0f9ff;
+  --color-medical-100: #e0f2fe;
+  --color-medical-200: #bae6fd;
+  --color-medical-300: #7dd3fc;
+  --color-medical-400: #38bdf8;
+  --color-medical-500: #0ea5e9;
+  --color-medical-600: #0284c7;
+  --color-medical-700: #0369a1;
+  --color-medical-800: #075985;
+  --color-medical-900: #0c4a6e;
+  --color-brand-primary: #3b82f6;
+  --color-brand-secondary: #6366f1;
+  --color-brand-accent: #f59e0b;
+  --color-brand-urgency-high: #ef4444;
+  --color-brand-urgency-medium: #f59e0b;
+  --color-brand-urgency-low: #10b981;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-slate-950);
+    color: var(--color-slate-100);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s;
+}
+
+.glass-input:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+  outline: none;
+}
+
+.animate-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Base classes using standard CSS instead of @apply to avoid Tailwind 4 startup issues */
+.chat-bubble {
+  border-radius: 1rem;
+  padding: 0.5rem 1rem;
+  max-width: 80%;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.chat-bubble-bot {
+  background-color: white;
+  color: #1e293b; /* slate-800 */
+  align-self: flex-start;
+  border: 1px solid #f1f5f9; /* slate-100 */
+}
+
+.dark .chat-bubble-bot {
+  background-color: #1e293b; /* slate-800 */
+  color: #f1f5f9; /* slate-100 */
+  border-color: #334155; /* slate-700 */
+}
+
+.chat-bubble-user {
+  background-color: #0ea5e9; /* medical-500 */
+  color: white;
+  align-self: flex-end;
+}
+
+.glass {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e2e8f0; /* slate-200 */
+}
+
+.dark .glass {
+  background-color: rgba(15, 23, 42, 0.8); /* slate-900 */
+  border-bottom-color: #1e293b; /* slate-800 */
+}
