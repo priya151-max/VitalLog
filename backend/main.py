@@ -6,8 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 #from nlp.predictor import MedicalPredictor
+#from nlp.preprocessor import MedicalPreprocessor
 from backend.nlp.predictor import MedicalPredictor
-from nlp.preprocessor import MedicalPreprocessor
+from backend.nlp.preprocessor import MedicalPreprocessor
 from ocr.engine import OCREngine
 from utils.llm_client import llm_client
 from utils.local_db import (
