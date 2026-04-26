@@ -5,7 +5,8 @@ import os
 
 # Set tesseract path - only for Windows local dev
 if os.name == 'nt':
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    #pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 # On Render/Linux, we assume tesseract is in the PATH
 
 class OCREngine:
