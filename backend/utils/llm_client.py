@@ -19,7 +19,7 @@ class LLMClient:
         else:
             self.client = None
 
-    def get_response(self, user_message, medical_context=None, history=None):
+    def get_response(self, user_message, medical_context=None, history=None, temperature=0.7):
         if not self.client:
             return "LLM integration is pending API Key configuration. Please check your .env file."
 
@@ -32,6 +32,7 @@ class LLMClient:
         3. Use the provided medical context (Specialty, Urgency, Entities) to make your answer highly relevant.
         4. If a value is abnormal (Low/High), explain what that means in simple terms.
         5. Structure your response with clear headings and bullet points for readability.
+        6. DO NOT use any emojis in your response. Use text and standard punctuation only.
         """
         
         if medical_context:
@@ -39,7 +40,6 @@ class LLMClient:
 
         messages = [{"role": "system", "content": system_prompt}]
         
-        # Add history if available
         if history:
             for msg in history:
                 messages.append({"role": msg["role"], "content": msg["content"]})
@@ -50,8 +50,12 @@ class LLMClient:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                temperature=0.7,
-                max_tokens=1000
+                temperature=temperature,
+                max_tokens=1000,
+                extra_headers={
+                    "HTTP-Referer": "http://localhost:3000",
+                    "X-Title": "VitalLog Medical Assistant",
+                }
             )
             return response.choices[0].message.content
         except Exception as e:

@@ -1,6 +1,8 @@
 import re
 import joblib
 import os
+import nltk
+from nltk.tokenize import sent_tokenize
 try:
     from .preprocessor import MedicalPreprocessor
     from ..utils.knowledge_base import MEDICAL_DICT, DEFAULT_ADVICE
@@ -105,22 +107,107 @@ class MedicalPredictor:
     def predict_specialty(self, text):
         if not self.model:
             return "General Medicine"
-        cleaned_text = self.preprocessor.clean_text(text)
-        prediction = self.model.predict([cleaned_text])[0]
-        return prediction
+        try:
+            cleaned_text = self.preprocessor.clean_text(text)
+            prediction = self.model.predict([cleaned_text])[0]
+            return str(prediction)
+        except Exception as e:
+            print(f"Prediction error: {e}")
+            return "General Medicine"
+
+    def extract_instructions(self, text):
+        """Extract actionable medical instructions."""
+        try:
+            sentences = sent_tokenize(text)
+        except:
+            sentences = re.split(r"(?<=[.!?])\s+", text)
+        
+        # Look for imperative verbs and common instruction patterns
+        instruction_keywords = ['take', 'drink', 'avoid', 'return', 'stop', 'use', 'apply', 'monitor', 'follow', 'keep', 'maintain', 'increase', 'decrease']
+        instructions = []
+        for sent in sentences[:15]:
+            if any(word in sent.lower() for word in instruction_keywords):
+                if len(sent.split()) > 3: # Avoid short fragments
+                    instructions.append(sent.strip())
+        return instructions[:3]
+
+    def check_negation(self, text, conditions=['fever', 'pain', 'cough', 'swelling', 'nausea']):
+        """Rule-based negation detection for common symptoms."""
+        results = {}
+        negation_terms = ['no', 'not', 'denies', 'negative', 'ruled out', 'absent', 'without', 'none']
+        
+        for condition in conditions:
+            # Look for condition in text
+            pattern = rf"(?i)(?:{condition})"
+            matches = list(re.finditer(pattern, text))
+            
+            if not matches:
+                results[condition] = "Not Mentioned"
+                continue
+                
+            status = "Present/Confirmed"
+            for match in matches:
+                # Check for negation in the 5 words preceding the condition
+                pre_context = text[max(0, match.start()-50):match.start()].lower()
+                if any(term in pre_context for term in negation_terms):
+                    status = "Absent/Ruled Out"
+                    break
+                # Check for negation in the 5 words following (e.g., "Fever: Negative")
+                post_context = text[match.end():match.end()+30].lower()
+                if any(term in post_context for term in negation_terms):
+                    status = "Absent/Ruled Out"
+                    break
+            
+            results[condition] = status
+        return results
+
+    def extract_meds(self, text):
+        """Basic medication extraction using regex patterns."""
+        # This is a simplified version; in production, we'd use a NER model or LLM
+        med_pattern = r"(?i)([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)\s+(\d+(?:\.\d+)?\s*(?:mg|ml|mcg|tablet|capsule|pill|units|puff))"
+        matches = re.findall(med_pattern, text)
+        meds = [{"name": m[0], "dosage": m[1]} for m in matches]
+        return meds
+
+    def detect_emotional_status(self, text):
+        """Detect patient behavioral/emotional status."""
+        text = text.lower()
+        anxious_terms = ['worried', 'anxious', 'fear', 'nervous', 'scared', 'apprehensive', 'uneasy']
+        distressed_terms = ['pain', 'crying', 'agitated', 'distress', 'uncomfortable', 'restless', 'suffering']
+        
+        anxious_score = sum(term in text for term in anxious_terms)
+        distressed_score = sum(term in text for term in distressed_terms)
+        
+        if distressed_score > anxious_score and distressed_score > 0:
+            return "Distressed"
+        if anxious_score > 0:
+            return "Anxious"
+        return "Stable"
 
     def get_full_analysis(self, text, lang='en'):
         specialty = self.predict_specialty(text)
+        
         urgency = self.detect_urgency(text)
         entities = self.extract_entities(text)
+
         explanations = self.analyze_findings(entities, lang)
+        
+        # New Features
+        instructions = self.extract_instructions(text)
+        negation = self.check_negation(text)
+        meds = self.extract_meds(text)
+        stress = self.detect_emotional_status(text)
         
         return {
             "specialty": specialty,
             "urgency": urgency,
             "entities": entities,
             "explanations": explanations,
-            "summary": " ".join(explanations)
+            "instructions": instructions,
+            "negation_check": negation,
+            "medications": meds,
+            "emotional_status": stress,
+            "summary": " ".join(explanations) if explanations else DEFAULT_ADVICE[lang]
         }
 
 if __name__ == "__main__":

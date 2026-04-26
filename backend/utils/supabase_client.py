@@ -7,7 +7,15 @@ load_dotenv()
 url: str = os.getenv("SUPABASE_URL", "")
 key: str = os.getenv("SUPABASE_ANON_KEY", "")
 
-supabase: Client = create_client(url, key) if url and key else None
+try:
+    if url and key:
+        supabase: Client = create_client(url, key)
+    else:
+        supabase = None
+        print("Warning: Supabase credentials missing. Local-only mode active.")
+except Exception as e:
+    supabase = None
+    print(f"Warning: Supabase initialization failed ({e}). Local-only mode active.")
 
 import uuid
 
@@ -39,3 +47,20 @@ def create_conversation(user_id: str, title: str):
         "title": title
     }).execute()
     return response.data[0]
+def get_all_metadata():
+    if not supabase: return []
+    response = supabase.table("messages").select("metadata").not_.is_("metadata", "null").execute()
+    return [m['metadata'] for m in response.data if m['metadata']]
+
+def get_latest_metrics():
+    if not supabase: return {}
+    # Get latest 5 messages with metadata to find metrics
+    response = supabase.table("messages").select("metadata").not_.is_("metadata", "null").order("created_at", {"ascending": False}).limit(10).execute()
+    
+    metrics = {}
+    for m in response.data:
+        if m['metadata'] and 'entities' in m['metadata']:
+            for ent in m['metadata']['entities']:
+                if ent['name'] not in metrics:
+                    metrics[ent['name']] = ent['value']
+    return metrics

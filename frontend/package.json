@@ -16,7 +16,7 @@
     "postcss": "^8.5.10",
     "tailwindcss": "^4.2.4",
     "typescript": "~6.0.2",
-    "vite": "^8.0.9"
+    "vite": "^6.0.0"
   },
   "dependencies": {
     "@radix-ui/react-dropdown-menu": "^2.1.16",

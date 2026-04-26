@@ -9,12 +9,15 @@ def download_nltk_resources():
     resources = [
         ('corpora', 'stopwords'),
         ('tokenizers', 'punkt'),
-        ('corpora', 'wordnet')
+        ('tokenizers', 'punkt_tab'),
+        ('corpora', 'wordnet'),
+        ('corpora', 'omw-1.4')
     ]
     for category, resource in resources:
         try:
+            # We try to find it; if it fails for any reason (missing or corrupted), we download
             nltk.data.find(f'{category}/{resource}')
-        except LookupError:
+        except Exception:
             nltk.download(resource, quiet=True)
 
 download_nltk_resources()
