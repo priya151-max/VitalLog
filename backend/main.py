@@ -5,7 +5,8 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
-from nlp.predictor import MedicalPredictor
+#from nlp.predictor import MedicalPredictor
+from backend.nlp.predictor import MedicalPredictor
 from nlp.preprocessor import MedicalPreprocessor
 from ocr.engine import OCREngine
 from utils.llm_client import llm_client
