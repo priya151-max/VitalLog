@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabase';
-import { motion, AnimatePresence } from 'framer-motion';
+//import { motion, AnimatePresence } from 'framer-motion';
 import { LogIn, UserPlus, Loader2, Shield } from 'lucide-react';
 
 export const Auth: React.FC<{ onAuthSuccess: () => void }> = ({ onAuthSuccess }) => {
