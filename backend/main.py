@@ -1,28 +1,29 @@
 import os
 import shutil
 import random
+import logging
+
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
-#from nlp.predictor import MedicalPredictor
-#from nlp.preprocessor import MedicalPreprocessor
+
+# ✅ FIXED IMPORTS (all start with backend)
 from backend.nlp.predictor import MedicalPredictor
 from backend.nlp.preprocessor import MedicalPreprocessor
-from ocr.engine import OCREngine
-from utils.llm_client import llm_client
-from utils.local_db import (
+from backend.ocr.engine import OCREngine
+from backend.utils.llm_client import llm_client
+from backend.utils.local_db import (
     get_or_create_user, get_user_conversations,
     create_local_conversation, save_local_message,
     get_local_chat_history, get_all_local_metadata,
     delete_conversation
 )
-from utils.knowledge_base import HEALTH_TIPS, HEALTH_QUOTES
+from backend.utils.knowledge_base import HEALTH_TIPS, HEALTH_QUOTES
+
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-
-import logging
 
 # Setup logging
 logging.basicConfig(
