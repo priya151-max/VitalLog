@@ -1,4 +1,4 @@
-# VitalLog: Premium Medical AI Assistant 🏥
+# VitalLog: An Intelligent Health Ledger🏥
 
 VitalLog is a state-of-the-art medical report analyzer and health assistant designed to simplify complex clinical data into actionable, easy-to-understand insights. Built with a focus on premium aesthetics and user-centric design, VitalLog bridges the gap between technical medical reports and patient understanding.
 
