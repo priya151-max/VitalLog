@@ -4,28 +4,21 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 
-# Download necessary NLTK data sparingly
-def download_nltk_resources():
-    resources = [
-        ('corpora', 'stopwords'),
-        ('tokenizers', 'punkt'),
-        ('tokenizers', 'punkt_tab'),
-        ('corpora', 'wordnet'),
-        ('corpora', 'omw-1.4')
-    ]
-    for category, resource in resources:
-        try:
-            # We try to find it; if it fails for any reason (missing or corrupted), we download
-            nltk.data.find(f'{category}/{resource}')
-        except Exception:
-            nltk.download(resource, quiet=True)
-
-download_nltk_resources()
+def _has_nltk_resource(path):
+    try:
+        nltk.data.find(path)
+        return True
+    except LookupError:
+        return False
 
 class MedicalPreprocessor:
     def __init__(self):
-        self.stop_words = set(stopwords.words('english'))
-        self.lemmatizer = WordNetLemmatizer()
+        self.has_stopwords = _has_nltk_resource('corpora/stopwords')
+        self.has_punkt = _has_nltk_resource('tokenizers/punkt')
+        self.has_wordnet = _has_nltk_resource('corpora/wordnet')
+
+        self.stop_words = set(stopwords.words('english')) if self.has_stopwords else set()
+        self.lemmatizer = WordNetLemmatizer() if self.has_wordnet else None
 
     def clean_text(self, text):
         if not text:
@@ -35,10 +28,10 @@ class MedicalPreprocessor:
         # Remove punctuation and special characters
         text = re.sub(r'[^a-zA-Z\s]', '', text)
         # Tokenization
-        tokens = word_tokenize(text)
+        tokens = word_tokenize(text) if self.has_punkt else text.split()
         # Stopword removal and lemmatization
         cleaned_tokens = [
-            self.lemmatizer.lemmatize(token) 
+            self.lemmatizer.lemmatize(token) if self.lemmatizer else token
             for token in tokens 
             if token not in self.stop_words
         ]

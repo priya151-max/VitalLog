@@ -1,15 +1,18 @@
 import os
+from pathlib import Path
 from openai import OpenAI
 from dotenv import load_dotenv
 
-load_dotenv()
+BACKEND_DIR = Path(__file__).resolve().parents[1]
+load_dotenv(BACKEND_DIR / ".env", override=True)
+load_dotenv(BACKEND_DIR / ".env.example", override=False)
 
 class LLMClient:
     def __init__(self):
         # OpenRouter uses an OpenAI-compatible API
-        self.api_key = os.getenv("OPENROUTER_API_KEY")
+        self.api_key = (os.getenv("OPENROUTER_API_KEY") or "").strip()
         self.base_url = "https://openrouter.ai/api/v1"
-        self.model = os.getenv("LLM_MODEL", "google/gemini-2.0-flash-001")
+        self.model = (os.getenv("LLM_MODEL") or "openai/gpt-4o-mini").strip()
         
         if self.api_key:
             self.client = OpenAI(
@@ -21,7 +24,7 @@ class LLMClient:
 
     def get_response(self, user_message, medical_context=None, history=None, temperature=0.7):
         if not self.client:
-            return "LLM integration is pending API Key configuration. Please check your .env file."
+            return "Error connecting to LLM: missing OPENROUTER_API_KEY in backend/.env"
 
         system_prompt = """You are VitalLog, a premium medical AI assistant. 
         Your goal is to simplify complex medical reports into plain language.
@@ -33,6 +36,7 @@ class LLMClient:
         4. If a value is abnormal (Low/High), explain what that means in simple terms.
         5. Structure your response with clear headings and bullet points for readability.
         6. DO NOT use any emojis in your response. Use text and standard punctuation only.
+        7. IMPORTANT: Respond in the language requested by the user. If they speak in Tamil or the language setting is Tamil, respond ENTIRELY in Tamil.
         """
         
         if medical_context:

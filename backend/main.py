@@ -49,8 +49,16 @@ predictor = MedicalPredictor(MODEL_PATH)
 preprocessor = MedicalPreprocessor()
 ocr_engine = OCREngine()
 
-_sw = set(stopwords.words('english'))
-_lemmatizer = WordNetLemmatizer()
+try:
+    _sw = set(stopwords.words('english'))
+except LookupError:
+    _sw = set()
+
+try:
+    _lemmatizer = WordNetLemmatizer()
+    _lemmatizer.lemmatize("tests")
+except LookupError:
+    _lemmatizer = None
 
 # ─── NLP Trace Builder ─────────────────────────────────────────────────────
 
@@ -80,7 +88,7 @@ def build_nlp_trace(text: str) -> dict:
     try:
         lowered = [t.lower() for t in raw_tokens]
         no_sw = [t for t in lowered if t.isalpha() and t not in _sw]
-        lemmatized = [_lemmatizer.lemmatize(t) for t in no_sw]
+        lemmatized = [_lemmatizer.lemmatize(t) if _lemmatizer else t for t in no_sw]
     except Exception:
         lowered = [t.lower() for t in raw_tokens]
         no_sw = [t for t in lowered if t.isalpha()]
@@ -295,14 +303,18 @@ Instructions Found: {local_analysis['instructions']}
 
 [OUTPUT STYLE]: {request.outputStyle}
 """
+    target_lang = "Tamil" if request.lang == "ta" else "English"
     llm_enrichment = llm_client.get_response(
-        f"Enrich this medical analysis with empathy and any additional advice NOT already covered. Keep it to 2-3 short paragraphs. User asked: {request.message}",
+        f"Enrich this medical analysis with empathy and any additional advice NOT already covered. Keep it to 2-3 short paragraphs. Respond strictly in {target_lang}. User asked: {request.message}",
         medical_context=custom_context,
         history=[{"role": m["role"], "content": m["content"]} for m in history[-6:]],
         temperature=request.learningRate
     )
 
-    disclaimer = "\n\n> **Please keep in mind that I am not a doctor, and personalized advice from a healthcare professional is always the best course of action.**"
+    if request.lang == 'ta':
+        disclaimer = "\n\n> **நான் ஒரு மருத்துவர் அல்ல என்பதை நினைவில் கொள்க. ஒரு மருத்துவ நிபுணரின் தனிப்பட்ட ஆலோசனையே எப்போதும் சிறந்தது.**"
+    else:
+        disclaimer = "\n\n> **Please keep in mind that I am not a doctor, and personalized advice from a healthcare professional is always the best course of action.**"
     
     if not llm_enrichment.startswith("Error"):
         final_reply = f"{nlp_reply}\n\n{llm_enrichment}{disclaimer}".strip()
@@ -350,12 +362,16 @@ async def upload_report(
         nlp_reply = build_nlp_first_reply(local_analysis, lang)
 
         context = f"REPORT TEXT (OCR):\n{text[:1000]}\n\nNLP ANALYSIS:\n{local_analysis}"
+        target_lang = "Tamil" if lang == "ta" else "English"
         llm_enrichment = llm_client.get_response(
-            "Briefly interpret this medical report with empathy. 2-3 short paragraphs only.",
+            f"Briefly interpret this medical report with empathy. 2-3 short paragraphs only. Respond strictly in {target_lang}.",
             medical_context=context
         )
 
-        disclaimer = "\n\n> **Please keep in mind that I am not a doctor, and personalized advice from a healthcare professional is always the best course of action.**"
+        if lang == 'ta':
+            disclaimer = "\n\n> **நான் ஒரு மருத்துவர் அல்ல என்பதை நினைவில் கொள்க. ஒரு மருத்துவ நிபுணரின் தனிப்பட்ட ஆலோசனையே எப்போதும் சிறந்தது.**"
+        else:
+            disclaimer = "\n\n> **Please keep in mind that I am not a doctor, and personalized advice from a healthcare professional is always the best course of action.**"
         
         if not llm_enrichment.startswith("Error"):
             final_reply = f"{nlp_reply}\n\n{llm_enrichment}{disclaimer}".strip()

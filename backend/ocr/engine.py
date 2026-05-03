@@ -2,12 +2,17 @@ import cv2
 import pytesseract
 import numpy as np
 import os
+import shutil
 
-# Set tesseract path - only for Windows local dev
+# Use the system PATH when available and only pin a Windows path as fallback.
 if os.name == 'nt':
-    #pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-    pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
-# On Render/Linux, we assume tesseract is in the PATH
+    detected_tesseract = shutil.which("tesseract")
+    if detected_tesseract:
+        pytesseract.pytesseract.tesseract_cmd = detected_tesseract
+    else:
+        fallback_path = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+        if os.path.exists(fallback_path):
+            pytesseract.pytesseract.tesseract_cmd = fallback_path
 
 class OCREngine:
     def __init__(self):

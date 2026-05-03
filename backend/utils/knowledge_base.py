@@ -63,6 +63,6 @@ HEALTH_QUOTES = [
 ]
 
 DEFAULT_ADVICE = {
-    "en": "I couldn't find specific details, but please keep a healthy lifestyle. Consult a doctor for confirmation.",
-    "ta": "குறிப்பிட்ட விவரங்கள் கிடைக்கவில்லை, ஆனால் ஆரோக்கியமான வாழ்க்கை முறையைப் பின்பற்றுங்கள். ஆலோசனைக்கு மருத்துவரை அணுகவும்."
+    "en": "Your health is my priority. While I'm still learning about specific cases, I recommend maintaining a balanced lifestyle and consulting a healthcare professional for a personalized assessment.",
+    "ta": "உங்கள் ஆரோக்கியமே எனது முன்னுரிமை. குறிப்பிட்ட விவரங்களை நான் இன்னும் கற்றுக்கொண்டிருந்தாலும், ஆரோக்கியமான வாழ்க்கை முறையைப் பின்பற்றி, தனிப்பட்ட ஆலோசனைக்கு மருத்துவரை அணுகுமாறு பரிந்துரைக்கிறேன்."
 }

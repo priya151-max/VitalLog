@@ -23,7 +23,7 @@ interface MedicalBotProps {
 }
 
 export const MedicalBot: React.FC<MedicalBotProps> = ({ 
-  messages, onSendMessage, onUpload, isLoading, lang 
+  messages, onSendMessage, onUpload, isLoading, lang, onToggleLang
 }) => {
   const [input, setInput] = useState('');
   const [isSpeaking, setIsSpeaking] = useState<number | null>(null);
@@ -78,8 +78,29 @@ export const MedicalBot: React.FC<MedicalBotProps> = ({
       return;
     }
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = lang === 'en' ? 'en-US' : 'ta-IN';
+
+    // Clean text: strip markdown characters (** , #, etc.) and extra symbols
+    const cleanText = text
+      .replace(/\*\*/g, '')           // Remove bold
+      .replace(/\*/g, '')            // Remove italics
+      .replace(/#/g, '')             // Remove headings
+      .replace(/>/g, '')             // Remove blockquotes
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // Remove links
+      .replace(/[:]/g, ' ')          // Replace colons with spaces for better flow
+      .trim();
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    
+    if (lang === 'ta') {
+      utterance.lang = 'ta-IN';
+      // Force pick a Tamil voice if available (Browsers sometimes ignore .lang)
+      const voices = window.speechSynthesis.getVoices();
+      const tamilVoice = voices.find(v => v.lang.includes('ta'));
+      if (tamilVoice) utterance.voice = tamilVoice;
+    } else {
+      utterance.lang = 'en-US';
+    }
+
     utterance.onend = () => setIsSpeaking(null);
     utterance.onstart = () => setIsSpeaking(idx);
     window.speechSynthesis.speak(utterance);
@@ -115,12 +136,19 @@ export const MedicalBot: React.FC<MedicalBotProps> = ({
                 <Sparkles size={64} className="text-brand-primary" />
                 <div className="absolute inset-0 bg-brand-primary/10 blur-[60px] -z-10 rounded-full" />
               </motion.div>
-              <h3 className="text-4xl font-black text-white mb-4 tracking-tight text-gradient">AI Health Assistant</h3>
+              <h3 className="text-4xl font-black text-white mb-4 tracking-tight text-gradient">
+                {lang === 'en' ? 'AI Health Assistant' : 'AI சுகாதார உதவியாளர்'}
+              </h3>
               <p className="text-slate-400 text-base leading-relaxed font-medium">
-                Ask about symptoms, upload a health report, or describe your condition for supportive analysis.
+                {lang === 'en' 
+                  ? 'Ask about symptoms, upload a health report, or describe your condition for supportive analysis.'
+                  : 'அறிகுறிகளைப் பற்றி கேளுங்கள், சுகாதார அறிக்கையைப் பதிவேற்றுங்கள் அல்லது உங்கள் நிலையை விவரிக்கவும்.'}
               </p>
               <div className="flex flex-wrap gap-2 mt-6 justify-center">
-                {['What is fever?', 'I have chest pain', 'Explain my health analysis'].map(s => (
+                {(lang === 'en' 
+                  ? ['What is fever?', 'I have chest pain', 'Explain my health analysis']
+                  : ['காய்ச்சல் என்றால் என்ன?', 'எனக்கு நெஞ்சு வலி உள்ளது', 'எனது சுகாதார அறிக்கையை விளக்குங்கள்']
+                ).map(s => (
                   <button key={s} onClick={() => onSendMessage(s)}
                     className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-300 hover:border-brand-primary/40 hover:text-white transition-all font-medium">
                     {s}
@@ -174,7 +202,9 @@ export const MedicalBot: React.FC<MedicalBotProps> = ({
                             ))}
                           </div>
                           <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">
-                            {isSpeaking === idx ? 'Speaking...' : 'HD Audio'}
+                            {isSpeaking === idx 
+                              ? (lang === 'en' ? 'Speaking...' : 'பேசுகிறது...') 
+                              : (lang === 'en' ? 'HD Audio' : 'HD ஆடியோ')}
                           </span>
                           {/* Neural Processing Toggle */}
                           {(msg.analysis || msg.nlp_trace) && (
@@ -285,9 +315,14 @@ export const MedicalBot: React.FC<MedicalBotProps> = ({
                 <Paperclip size={20} />
                 <input type="file" className="hidden" onChange={handleFileChange} accept="image/*,application/pdf" />
               </label>
+              <button type="button" onClick={onToggleLang}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary/20 transition-all">
+                <Sparkles size={12} />
+                {lang === 'en' ? 'English' : 'தமிழ்'}
+              </button>
               <input type="text" value={input}
                 onChange={e => setInput(e.target.value)}
-                placeholder="Describe your symptoms or ask a medical question..."
+                placeholder={lang === 'en' ? "Describe your symptoms..." : "உங்கள் அறிகுறிகளை விவரிக்கவும்..."}
                 className="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder-slate-600 text-base py-3 font-medium" />
               <button type="submit" disabled={!input.trim() || isLoading}
                 className={`w-12 h-12 rounded-[1.2rem] flex items-center justify-center transition-all ${
